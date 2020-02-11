@@ -1,3 +1,13 @@
 # Machine Learning Web services
 
-Machine learning Web Services to instantiate and train models on some public available datasets
+Flask Web Services for instantiation and training of ML models with some public available datasets:
+
+Available tasks:
+
+* **duration_prediction:** predict the duration of a given task;
+* **house_prices_learning:** house prices prediction, with ML algorithm configuration and instantiation form and batch-based  continuos learning functionality;
+* **movies_recommendation_rmodel:** movies recommender system, with imported model pre-trained in R;
+* **resource_suggestion:** resource suggestion for work assignment and planning.
+
+
+
