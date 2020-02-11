@@ -1,0 +1,103 @@
+{% extends "bootstrap/base.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+{% block title %}Insert your house data{% endblock %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='css/app.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container index-container">
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <!-- <strong>Title</strong> --> {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+   
+    <h3>Experiment Context</h3>
+    <p>
+        This experiment is built on a machine learning model for houses' prices predictions.  The task is a typical regression problem, where we want to use contextual caractheristics of the houses to find out a trend in the price estimation.
+    </p>
+    <p>
+        The dataset is the well-known Boston Housing Dataset. it consists of price of houses in various places in Boston. Alongside with price, the dataset also provide information here described:    
+    </p>
+    <ul id="features-description"> 
+            <li><strong>CRIMe rate:</strong> Per capita crime rate by town</li>
+            <li><strong>INDUStries rate:</strong> Proportion of non-retail business acres per town</li>
+            <li><strong>RooMs:</strong> Average number of rooms per dwelling</li>
+            <li><strong>AGEd rate:</strong> Proportion of owner-occupied units built prior to 1940</li>
+            <li><strong>Employ center DISstance:</strong> Weighted distances to five Boston employment centers</li>
+            <li><strong>property TAX:</strong> Full-value property tax rate per $10,000</li>
+            <li><strong>PTRATIO:</strong> Pupil-teacher ratio by town</li>
+            <li><strong>Lower STATus:</strong> Percentage of lower status of the population</li>
+    </ul>
+    <h3>Try Out</h4>
+    <p>
+        If you want to try out this experiment, think of being a real estate agent. As an agent, customers come to you for advices on the sale or purchase of their home. Of course, to understand what is the best price for their home, you base on a set of parameters and characteristics of the house itself or similar houses.
+    </p>
+    <p>
+        In the first hypothesis, think of the task of estimating the cost of the house for one of your customers: you fill in the characteristics of the house which the customer gave to you. Well, the system will use contextual market information and the information you filled in, to compute an estimate as accurate as possible. In the second case, to ascertain the validity of the estimate, you can check how this was computed by comparing the price at which similar houses were sold.
+    </p>
+    <p>
+        If you want instead to feed our prediction model, so our model could learn from new sales episodes, assume to bring back the houses you sold. Over time the system will learn the new trends and will be able to adapt its predctions to the current market.
+    </p>
+    
+    <br>
+    <h4>Please insert the data of your house and related district</h4>
+    
+    <form action="{{ url_for('predict') }}" id="house-form" class="form row" method="post" role="form">
+        {{ form.hidden_tag() }}
+              
+        {{ wtf.form_field(form.crim, class="form-control")}}
+        {{ wtf.form_field(form.indus, class="form-control")}}
+        {{ wtf.form_field(form.rm, class="form-control")}}
+        {{ wtf.form_field(form.age, class="form-control")}}
+        {{ wtf.form_field(form.dis, class="form-control")}}
+        {{ wtf.form_field(form.tax, class="form-control")}}
+        {{ wtf.form_field(form.ptratio, class="form-control")}}
+        {{ wtf.form_field(form.lstat, class="form-control")}}
+        {#{{ wtf.form_field(form.chas, class="form-check-input")}}#}
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;<strong>[*] required fields</strong></p>
+        
+        <div class="text-center" >
+        {{ wtf.form_field(form.submit) }}
+        {{ wtf.form_field(form.submit_sim) }}
+        </div>
+    
+    </form>
+</div>    
+{% endblock %}
+{% block scripts %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>   
+
+    $('#submit_sim').click(function (e){
+        $('#house-form').attr("action", "{{ url_for('similar') }}");
+    });
+
+    window.setTimeout(function() {
+        $(".alert").fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove(); 
+        });
+    }, 4000);
+</script>
+
+{{super()}}
+{% endblock %}

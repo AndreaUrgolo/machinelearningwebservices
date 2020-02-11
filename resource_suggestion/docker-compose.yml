@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  resource_suggestion:
+    build: ./ws
+    image: registryhost:5000/repo/resource_suggestion
+    ports:
+      - "5057:5057/tcp"
+      - "8087:8087/tcp"
+    links:
+      - mongodb
+    deploy:
+      resources:
+        limits:
+          memory: 16g
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017/tcp"
+    volumes:
+      - /mongodata:/data/db
+    environment:
+     - MONGO_INITDB_ROOT_USERNAME=mongouser
+     - MONGO_INITDB_ROOT_PASSWORD=mongouserpwd
+    #  - MONGO_INITDB_DATABASE=init_db
+      
+#volumes:
+#  mongodata:
+    

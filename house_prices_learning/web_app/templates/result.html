@@ -1,0 +1,106 @@
+{% extends "bootstrap/base.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+{% block title %}Recommended movies for {{preferred_movie}} {% endblock %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='css/app.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container row center-block">
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  <!-- Categories: success (green), info (blue), warning (yellow), danger (red) -->
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible" role="alert">
+      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <!-- <strong>Title</strong> --> {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+   
+  <div class="col-md-3"> 
+    <h3>Prediction: <span class="small">{{ (price*1000)|int }} Euro</span></h4>
+    
+    <p><strong>Results related to: </strong></p>
+        <dl class="dl-horizontal">
+        {% for k,l in labels.items() %}
+            <dt>{{ l }}</dt>
+            {% if house[k] %}
+                <dd>{{house[k]}}</dd>
+            {% else %}
+                <dd>{{house_fixed[k]}}*</dd>
+            {% endif %}
+        {% endfor %}
+        </dl>
+    <p><strong>* estimated from similar items</strong></p>
+  </div>
+  <div class="col-md-9">  
+    {% if similar_items %}
+        <h3>Similar houses data:</h3>
+        <table class="table table-striped" id="result-table">
+            <thead>
+                <tr>
+                    {% for l in similar_items_columns %}
+                        <th>{{ labels[l] }}</th>
+                    {% endfor %}
+                    <th>Price (Euro)</th>
+                    <th>Similarity</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for itm in similar_items %}
+                    {% if price*1000 - similar_items_y[loop.index-1] < tolerance and similar_items_y[loop.index-1] - price*1000 < tolerance  %}
+                    <tr>
+                        {% for itm_val in itm %}
+                            {% if loop.index==3 %}
+                                <td>{{ itm_val|round|int }}</td>
+                            {% else %}
+                                <td>{{ itm_val }}</td>
+                            {% endif %}
+                        {% endfor %}
+                        <td>{{similar_items_y[loop.index-1]|int}}</td>
+                        <td><strong>{{ similarity_values[loop.index-1] }}</strong></td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+  </div>
+</div>  
+<div class="container row center-block">
+    <h4>Have you sold this house?</h4>
+        <br>
+    <form action="{{ url_for('do_send_real_y') }}" id="real-y-form" class="form form-inline" method="post" role="form">
+        {{ real_y_form.hidden_tag() }}
+        {{ wtf.form_field(real_y_form.real_y, class="form-control")}}
+        {{ wtf.form_field(real_y_form.submit) }}
+    </form>
+    <div class="text-left"><a href="{{url_for('index')}}" id="back-btn" class="btn btn-default" role="button">&lt;- Back</a></div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+window.setTimeout(function() {
+    $(".alert").fadeTo(500, 0).slideUp(500, function(){
+        $(this).remove(); 
+    });
+}, 4000);
+</script>
+{{super()}}
+{% endblock %}

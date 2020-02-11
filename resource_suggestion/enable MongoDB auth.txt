@@ -1,0 +1,9 @@
+use admin
+db.createUser(
+  {
+    user: "root",
+    pwd: "Space2018",
+    roles: [ { role: "userAdminAnyDatabase", db: "admin" }, "readWriteAnyDatabase" ],
+    mechanisms:["SCRAM-SHA-1"]
+  }
+)

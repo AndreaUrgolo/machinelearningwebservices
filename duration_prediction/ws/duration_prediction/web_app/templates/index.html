@@ -1,0 +1,372 @@
+{% extends "bootstrap/base.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+{% block title %}Choose task type and Operator{% endblock %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='css/app.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid index-container">
+<div id="wrapper" class="sidebar-visible">
+  <div id="page-content-wrapper">
+
+    <button id="sidebar-open" type="button" class="btn btn-light">
+          <span class="glyphicon glyphicon-menu-hamburger"></span>
+    </button>
+    
+    <form action="" id="res-choice" name="res-choice">
+      <table class="hidden table table-striped" id="res-table">
+              <tbody>
+              </tbody>
+      </table>
+    </form>
+  </div>
+
+  <div id="sidebar-wrapper">
+    <div class="row v-center"> 
+      <div id="modal-menu"> 
+        <button id="sidebar-toggle" type="button" class="btn btn-light">
+          <span class="glyphicon glyphicon-remove"></span>
+        </button>
+        <button id="show-search-btn" type="button" class="btn btn-warning">
+          <span class="glyphicon glyphicon-search"></span>
+        </button>
+        <button id="show-ws-btn" type="button" class="btn btn-light">
+          <span class="glyphicon glyphicon-briefcase"></span>
+        </button>
+      </div>
+	  <div class="col-md-1">&nbsp;</div>
+      <div id="oc-form" class="col-md-10 col-md-offset-1">
+        <!-- <h4>Please choose an operative center</h4> -->
+        <form action="" id="oc-form" class="form form-inline row" method="post" role="form">
+            <div class="text-center">
+              {{ form.hidden_tag() }}
+              {# wtf.form_field(form.ocs_select, class="form-control") #}
+
+              <div class="form-group  required">
+                <label class="control-label" for="ocs_select">Operative center:</label>
+                      
+                <select class="form-control" id="ocs_select" name="ocs_select" placeholder="Choose an operative center" required="">
+
+                  <option value="0">---</option>
+                  {% for oc in ocs %}
+                    <option value="{{ocs[oc]}}">{{oc}}</option>
+                  {% endfor %}
+                </select>
+                      
+              </div>
+
+              <br><br>
+              <div class="form-group  required">
+                <label class="control-label" for="last-date">Date:</label>
+                <input type="text" class="form-control" disabled="" id="last-date" name="last-date" placeholder="" size="14">
+              </div>
+              <br><br>
+              <div class="text-center">
+                <button id="oc-search" type="button" class="btn btn-default">
+                    <span class="glyphicon glyphicon-search"></span>
+                    Search
+                </button>
+              </div>
+            </div>
+        </form>
+      </div>
+      <div id="odl-list" class="col-md-11 hidden">
+        
+      </div>
+    </div>
+  </div>
+</div>
+</div>    
+<div id="loading-overlay" class="vcenter">
+        <div>
+            <div class="lds-dual-ring">Loading...<br><br></div>
+        </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>   
+    var resources=[];
+    var oc;
+    var WS_URL = {{ config.WS_URL|tojson|safe }}
+    var OC_DATA_REQ = {{ config.OC_DATA_REQ|tojson|safe }}
+    var OC_DATE_REQ = {{ config.OC_DATE_REQ|tojson|safe }}
+    var PREDICT_REQ = {{ config.PREDICT_REQ|tojson|safe }}
+
+    var DATA_CHARSET = {{ config.DATA_CHARSET|tojson|safe }}
+
+    var ocs = {{ ocs|tojson|safe }}
+
+    $("#sidebar-toggle").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("sidebar-visible");
+    });
+
+    $("#sidebar-open").click(function(e) {
+        e.preventDefault();
+        $("#wrapper").toggleClass("sidebar-visible");
+    });
+
+    $('#ocs_select').change(function(){
+      var data = {
+        'oc': ocs[$("#ocs_select option:selected").text()]
+      }
+      
+      if(data['oc'] == "---"){
+        $("#last-date").val("");
+        return;
+      }
+
+      $.ajax({
+          type : "POST",
+          url : WS_URL + OC_DATE_REQ,
+          data: JSON.stringify(data, null, '\t'),
+          contentType: 'application/json;charset='+DATA_CHARSET,
+          success: function(result) {
+            $("#last-date").val(result);
+          }
+      });
+    });
+
+    $('#oc-search').click(function(){
+      // show loading overlay
+      document.getElementById("loading-overlay").style.display = "flex";
+    
+      oc = ocs[$("#ocs_select option:selected").text()]
+      var data = {
+        'oc': oc
+      }
+
+      if(data['oc'] == "---"){
+        alert('Please choose an operative center');
+        return;
+      }
+
+      $.ajax({
+          type : "POST",
+          url : WS_URL + OC_DATA_REQ,
+          data: JSON.stringify(data, null, '\t'),
+          contentType: 'application/json;charset='+DATA_CHARSET,
+          error: function(jqXHR, textStatus, errorThrown){
+            alert('Si è verificato un errore');
+            console.log(textStatus);
+            console.log(errorThrown);
+            console.log(jqXHR);
+            if(jqXHR.hasOwnProperty('responseText')){
+              console.log(jqXHR['responseText']);
+              var res = jqXHR['responseText']; 
+              try{
+                JSON.parse(jqXHR['responseText']);
+              } catch (err){
+                var msg=err.message.split(' ');
+                var errCharPos = parseInt(msg[msg.length-1]);
+                console.log(res.charAt(errCharPos));
+              }
+            }
+          }, 
+          success: function(result) {
+            console.log(result);
+            
+            resources=result['rs']
+
+            var output = "";
+
+            for (var i = 0; i < resources.length; i++) {
+                res_data = resources[i]
+                output += '<tr data-res="'+ res_data['id'] +'">'+
+                    '<td class="text-center"><input name="movie-picker" id="'+res_data['id']+
+                    '" value="'+res_data['id']+'" type="radio" /></td>';
+                output += '<td class="text-left"><div class="res-name"><span class="glyphicon glyphicon-circle-arrow-right assigned-res hidden"></span> <strong>Resource '+res_data['name']+'</strong></div>';
+                
+                if(res_data['impresa_esterna']){
+                    output += '<div><em>External company: '+res_data['impresa_esterna']+'</em></div>';
+                }
+                
+                output += '<div class="hidden predicted-time-txt">Predicted time: <span id="res-pred'+res_data['id']+'"></span> <span>(min)</span></div>'
+                
+                xp_output = '';
+                for (var key in res_data) {
+                    if (res_data.hasOwnProperty(key) && key!='id' && key!='name' && key!='impresa_esterna' && res_data[key] > 0)  {
+                        act_stars =  Math.round(res_data[key])
+                        stars_out = ''
+                        for(var j=0; j < 5; j++){
+                            if (j < act_stars) 
+                                stars_out += '<img src="{{url_for('static', filename='img/staron.png')}}">'
+                            else
+                                stars_out += '<img src="{{url_for('static', filename='img/staroff.png')}}">'
+                        }
+                        xp_output  += '<pre><strong>'+key+ '</strong>: '+stars_out+'</pre>';
+                    }
+                }
+                output+=xp_output+'</td><td><img src="{{url_for('static', filename='img/plan.png')}}"></td></tr>';
+            }
+            
+            if(output) {
+                $('#res-table tbody').html(output);
+                $('#res-table').removeClass('hidden');
+            }
+            
+            
+            //prepare output for wos
+            var ws=result['ws']
+            
+            output = '<div class="panel-group" id="accordion">'
+                
+            for (var i = 0; i < ws.length; i++) {
+                var wo=ws[i]
+
+                // extract the required skills set from the SKILLSOFCONFIGURATION feature
+                skills_set = {};
+                if (wo['SKILLSOFCONFIGURATION']) {
+                  socs = wo['SKILLSOFCONFIGURATION'].split(';');
+                  for(var j=0; j<socs.length; j++) {
+                    soc = socs[j].split('-');
+                    if(soc.length==3) {
+                      skill = soc[1];
+                      skills_set[skill] = true;
+                    }
+                  }
+                }
+                output+='<div class="panel panel-default">'+
+                            '<div class="panel-heading" id="heading'+i+'">'+
+                                '<h5 class="panel-title">'+
+                                    '<a data-wo="'+ wo['CODICEODL'] +'" data-res="'+ wo['IDRISORSA'] +'" data-app="'+ wo['AAGEID'] +'" class="btn btn-link" data-toggle="collapse" data-parent="#accordion"'+ 'href="#collapse' + i + '">Work Order ' + wo['CODICEODL'] + '</a>'+
+                                '</h5>'+
+                            '</div>'+
+                            '<div id="collapse'+i+'" class="panel-collapse collapse text-truncate">'+
+                                '<div class="panel-body text-left">'+
+                                    '<div class="text-truncate">Type: ' + wo['TIPOLOGIAODL'] + '</div>' +
+                                    '<div class="text-truncate">Extimated time: <strong>' + wo['DURATAPREVISTAOPERAZIONE'] + '</strong>; '+
+                                    ' Accounted time: <strong>' + parseInt(wo['TEMPOSOLOLAVORO_COMPUTED'] * 100)/100 + '</strong>;</div>'; // int duration
+                                    //' Accounted time: <strong>' + wo['TEMPOSOLOLAVORO_CLASS'] + '</strong>;</div>'; // class duration
+                                    //'<div class="text-truncate">Assigned resource: <strong>' + wo['RISORSA'] + '</strong></div>';
+                                    n_skills = Object.keys(skills_set).length;
+                                    if (n_skills > 0) {
+                                      output += '<div class="text-truncate">Skills: <strong>';
+                                      for (var k=0;  k < n_skills; k++) {
+                                        key=Object.keys(skills_set)[k];
+                                        output += key;
+                                        if (k < n_skills-1) {
+                                          output += ', ';
+                                        }
+                                      }
+                                      output += '</strong>;</div>';
+                                    }
+                                output += '</div>'+
+                            '</div>'+
+                        '</div>';
+            }
+            
+            output+='</div>';
+            
+            $('#odl-list').html(output);
+            
+            // prediction
+            $('#odl-list a').click(onODLClick);
+            
+            // hide loading overlay
+            document.getElementById("loading-overlay").style.display = "none";
+          }
+       });
+    });
+    
+    
+    function stopOnClickPropagation(evt){
+        evt.stopImmediatePropagation();
+        return false;
+    }
+    
+    function onODLClick(){
+        var callback = arguments.callee
+        $('#odl-list a').off('click', callback);
+        $('#odl-list a').on('click', stopOnClickPropagation);
+        
+        // show loading overlay
+        document.getElementById("loading-overlay").style.display = "flex";
+        
+        var res = $(this).attr('data-res'); // assigned resource
+        $('#res-table .assigned-res').addClass('hidden');
+        $('#res-table').find("tr[data-res='" + res + "'] .assigned-res").removeClass('hidden');
+        
+        rs = []
+        for (var i = 0; i < resources.length; i++) {
+            rs.push(resources[i]['id']);
+        }
+        
+        data = {
+            'oc' : oc,
+            'odl' : $(this).attr('data-wo'),
+            'res' : res,
+            'app' : $(this).attr('data-app'),
+            'rs' : rs
+        }
+        
+        
+        $.ajax({
+            type : "POST",
+            url : WS_URL + PREDICT_REQ,
+            data: JSON.stringify(data, null, '\t'),
+            contentType: 'application/json;charset=' + DATA_CHARSET,
+            success: function(response) {
+                console.log(response);
+                var results=response['results']                    
+                for (var i = 0; i < results.length; i++) {
+                    r=results[i];
+                    // $('#res-pred'+r['id']).html(parseInt(r['pred'])).parent().removeClass('hidden'); // for int prediction
+                    $('#res-pred'+r['id']).html(r['pred']).parent().removeClass('hidden'); // for class prediction
+                }
+                // hide loading overlay
+                document.getElementById("loading-overlay").style.display = "none";
+                $('#odl-list a').off('click', stopOnClickPropagation);
+                $('#odl-list a').on('click', callback);
+            }
+        });
+    }
+  
+    
+    $('#show-search-btn').click(function(){
+        $(this).addClass('btn-warning');
+        $(this).removeClass('btn-light');
+        $('#show-ws-btn').removeClass('btn-warning');
+        $('#show-ws-btn').addClass('btn-light');
+        $('#oc-form').removeClass('hidden');
+        $('#odl-list').addClass('hidden');
+    });
+    $('#show-ws-btn').click(function(){
+        $(this).addClass('btn-warning');
+        $(this).removeClass('btn-light');
+        $('#show-search-btn').removeClass('btn-warning');
+        $('#show-search-btn').addClass('btn-light');
+        $('#oc-form').addClass('hidden');
+        $('#odl-list').removeClass('hidden');
+    });
+    
+    
+    
+    
+//     $('#submit_rank').click(function (e){
+//         $('#house-form').attr("action", "{#{ url_for('ops_rank') }#}");
+//     });
+
+    
+    // window.setTimeout(function() {
+    //     $(".alert").fadeTo(500, 0).slideUp(500, function(){
+    //         $(this).remove(); 
+    //     });
+    // }, 4000);
+</script>
+
+{{super()}}
+{% endblock %}

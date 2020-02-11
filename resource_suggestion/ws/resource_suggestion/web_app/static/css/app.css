@@ -1,0 +1,169 @@
+/* center vertical align */
+.v-center {
+   display: flex;
+   align-items: center;
+   position:absolute;
+   left:0;
+   right: 0; 
+   top:0;
+   bottom:0;
+   heigth:100%
+}
+
+body {
+  overflow-x: visible;
+}
+
+#wrapper {
+  padding-right: 0;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+}
+
+#wrapper.sidebar-visible {
+  padding-right: 250px;
+}
+
+#sidebar-open {
+    position:fixed;
+    right: 0;
+    top: 0;
+}
+
+#sidebar-wrapper {
+  z-index: 1000;
+  position: fixed;
+  right:40%;
+  width: 0;
+  height: 100%;
+  margin-right: -40%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #ccc;
+  -webkit-transition: all 0.5s ease;
+  -moz-transition: all 0.5s ease;
+  -o-transition: all 0.5s ease;
+  transition: all 0.5s ease;
+  -webkit-box-shadow: -5px 2px 5px 0px rgba(0,0,0,0.42);
+  -moz-box-shadow: -5px 2px 5px 0px rgba(0,0,0,0.42);
+  box-shadow: -5px 2px 5px 0px rgba(0,0,0,0.42);
+}
+
+#wrapper.sidebar-visible #sidebar-wrapper {
+  width: 40%;
+}
+
+#page-content-wrapper {
+  width: 60%;
+  position: absolute;
+  padding: 15px;
+}
+
+#oc-form {
+  background-color: #fff;
+  margin-top: 30px;
+  margin-right:20px;
+  margin-left:15px;
+  padding-top:10px;
+  padding-bottom:20px;
+}
+
+
+#modal-menu button {
+    float:left;
+    clear:both;
+}
+
+#res-table td {
+    vertical-align:middle;
+}
+
+#res-table td pre {
+    padding: 2px 5px;
+}
+
+#res-table td pre strong {
+    font-size:.8em;
+}
+
+#res-table td pre img {
+    height: 15px;
+}
+
+.res-name{
+    padding-bottom: 12px;
+}
+
+.assigned-res { 
+    color: green;
+}
+
+.highlight {
+    background-color: #c6ffb3 !important;
+}
+
+.res-score-txt {
+    font-weight: bolder;
+    margin-bottom: 4px;
+}
+
+.res-score-txt span {
+    color: green;
+}
+
+#odl-list{
+    height: 100%;
+}
+
+#accordion{
+    margin-top:20px;
+}
+
+
+#loading-overlay {
+  align-items: center;
+  text-align: center;
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0; 
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5); /* Black background with opacity */
+  z-index: 1000; 
+  cursor: pointer; /* Add a pointer on hover */
+  color: #ccc;
+}
+
+.lds-dual-ring {
+  display: inline-block;
+  width: 64px;
+  height: 64px;
+  position:absolute;
+  left:49%;
+  margin-top:-80px;
+}
+
+.lds-dual-ring:after {
+  content: " ";
+  display: block;
+  width: 46px;
+  height: 46px;
+  margin: 1px;
+  border-radius: 50%;
+  border: 5px solid #fff;
+  border-color: #fff transparent #fff transparent;
+  animation: lds-dual-ring 1.2s linear infinite;
+}
+@keyframes lds-dual-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

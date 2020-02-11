@@ -1,0 +1,16 @@
+.container {margin-top: 50px;}
+
+h4 .small{
+    font-size: 90%;
+}
+
+#movie-form .form-group, .btn {
+    margin-top:16px;
+    margin-left:15px;
+}
+
+
+#result-table td:first-child {
+    font-weight: normal;
+    font-size: 90%;    
+}

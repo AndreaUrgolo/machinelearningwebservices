@@ -1,0 +1,48 @@
+.container {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
+
+.index-container {
+    margin-top: 32px;
+}
+
+h4 .small{
+    font-size: 90%;
+}
+
+
+#features-description{
+    margin: 26px 46px 32px;
+}
+
+#house-form .form-group, .btn {
+    margin-top:16px;
+    margin-left:15px;
+}
+
+#house-form .checkbox {
+    margin-top:16px;
+    margin-left:15px;
+}
+
+#house-form .checkbox label {
+    font-weight: bold;
+}
+
+
+#house-form .checkbox input {
+    margin-left: 2px;
+    position: relative;
+    bottom: -2px;
+}
+
+#result-table td {
+    font-weight: normal;
+    font-size: 90%;
+}
+
+#real-y-form .btn {
+    position: relative; 
+    top: -8px;
+}

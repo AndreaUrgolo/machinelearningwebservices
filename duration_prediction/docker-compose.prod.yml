@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  duration_prediction:
+    image: registryhost:5000/repo/duration_prediction
+    ports:
+      - "5058:5058/tcp"
+      - "8088:8088/tcp"
+    links:
+      - mongodb
+    deploy:
+      resources:
+        limits:
+          memory: 12g
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017/tcp"
+    volumes:
+      - /mongodata:/data/db
+    environment:
+     - MONGO_INITDB_ROOT_USERNAME=mongouser
+     - MONGO_INITDB_ROOT_PASSWORD=mongouserpwd
+     #  - MONGO_INITDB_DATABASE=init_db
+      
+#volumes:
+#  mongodata:
+    

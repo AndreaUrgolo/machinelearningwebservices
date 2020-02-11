@@ -1,0 +1,83 @@
+{% extends "bootstrap/base.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+{% block title %}Recommended movies for {{preferred_movie}} {% endblock %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='css/app.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h4><strong>Recommended movies for {{preferred_movie}}. <span class="small">Please select the one you'll like to watch.</span></h4>
+  <form action="/" id="movie-vote" name="movie-vote">
+    <table class="table table-striped" id="result-table">
+            <thead>
+                <tr class="row">
+                    <th class="col-md-8">Title</th>
+                    <th class="col-md-3 text-right">Movie similarity</th>
+                    <th class="col-md-1 text-center">Vote</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for m in recommended[0] %}
+                {% if m[1] != preferred_movie and recommended[1][loop.index-1]>0.84 %}
+                <tr class="row">
+                    <td class="col-md-8">{{ m[1] }}</td>
+                    <td class="col-md-3 text-right">{{ recommended[1][loop.index-1] }}</td>
+                    <td class="col-md-1 text-center"><input name="movie-picker" id="{{m[0]}}" value="{{m[0]}}" type="radio" /></td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+    </table>
+  </form>
+   <p class="text-center"><button id="send-btn" class="btn btn-lg btn-secondary" data-toggle="modal" data-target="#myModal" >&nbsp;&nbsp;&nbsp; Send &nbsp;&nbsp;&nbsp;</button></p>
+  
+  
+  <!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+<!--        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Modal Header</h4>
+        </div>-->
+        <div class="modal-body">
+          <p class="text-center text-normal" id="modalMsg">Thank you, your vote will be used to improve our recommendation system.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+$("#send-btn").click(function() {
+    $('#myModal').css('margin-top', '10em');
+
+    if (!$("input[name='movie-picker']").is(':checked')) {
+        $('#modalMsg').text('Please choose a movie to watch.');
+    } else {
+        $('#modalMsg').text('Thank you, your vote will be used to improve our recommendation system.');
+            $('#myModal').click(function(){
+                document.location.href="/";
+            })
+    }
+}) 
+
+</script>
+{{super()}}
+{% endblock %}

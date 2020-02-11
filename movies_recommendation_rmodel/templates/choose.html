@@ -1,0 +1,61 @@
+{% extends "bootstrap/base.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+{% block title %}Choose a preferred movie{% endblock %}
+
+{% import "bootstrap/fixes.html" as fixes %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block head %}
+    {{super()}}
+    {{fixes.ie8()}}
+{%- endblock %}
+
+{% block styles -%}
+    {{super()}}
+    <link rel="stylesheet" type="text/css"
+          href="{{url_for('static', filename='css/app.css')}}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h4><strong>Welcome to our movies recommender system</strong>, <span class="small">please select a movie you've already watched:</span></h4>
+    
+    <form action="{{ url_for('recommend') }}" id="movie-form" class="form form-inline row" method="post" role="form">
+        {{ form.hidden_tag() }}
+        
+        {{ wtf.form_field(form.genre, class="form-control ")}}
+        {{ wtf.form_field(form.movie, class="form-control " )}}
+
+        {{ wtf.form_field(form.submit) }}
+
+        {% for message in form.genre.errors %}
+            <div>{{ message }}</div>
+        {% endfor %}
+
+        {% for message in form.movie.errors %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    </form>
+</div>    
+{% endblock %}
+{% block scripts %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>   
+
+    //film per genere 
+    var mbg = {{ movies|tojson }};
+
+   $('#genre').on('change', function(e){
+        //console.log(movies);
+        var genre_id=$('#genre').val();
+        $('#movie').empty();
+        for(i=0; i<mbg[genre_id].movies.length; i++) {
+            opt='<option value='+ mbg[genre_id].movies[i][0] + '>' +  mbg[genre_id].movies[i][1] + '</option>';               
+            
+            $('#movie').append(opt);
+        }
+   })
+</script>
+
+{{super()}}
+{% endblock %}
