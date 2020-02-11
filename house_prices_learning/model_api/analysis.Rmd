@@ -1,0 +1,86 @@
+---
+title: "1985 Auto Imports Database Price regressions"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importo librerie
+
+```{r echo=FALSE}
+library(ggplot2)
+library(reshape2)
+library(recommenderlab)
+library(Hmisc)
+library(dummies)
+set.seed(1) # per rendere riproducibile la scelta random (solo x testing)
+```
+
+## Dati dele macchine
+
+```{r echo=FALSE}
+
+houses <- read.table("data/housing.data.txt", sep="|", header=TRUE, na.strings = c("?"), stringsAsFactors = FALSE)
+#colnames(cars) <- c("symboling", "norm_losses", "make", "fuel_type","aspiration","num_doors",
+                    # "body_style", "drive_wheels", "engine_location", "wheel_base", "length",
+                    # "width", "height", "curb_weight", "engine_type", "num_cylinders",
+                    # "engine_size", "fuel_system", "bore", "stroke", "compression_ratio",
+                    # "horsepower", "peak_rpm", "city_mpg", "highway_mpg", "price")
+
+concat <- data.frame(matrix(ncol = 0, nrow = nrow(houses)),  stringsAsFactors = FALSE)
+concat$ID <- seq.int(nrow(houses))
+houses <- cbind(concat, houses)
+
+houses
+```
+
+## Test variables correlation - ALL
+
+```{r echo=FALSE}
+price_cor <- cor(houses[, c(-1, -15)], houses$CRIM, method = "pearson")
+price_cor
+
+labels <- colnames(houses[, c(-1, -15)])
+image(matrix(price_cor), xlab="", ylab="", x = 1:length(labels), y = 1, axes=FALSE, main="Matrice Correlazioni per le feature delle case")
+axis(1, at=1:length(labels), labels=labels, las= VERTICAL<-2)
+axis(2, at=c(1), labels='PRICE', las= VERTICAL<-0)
+
+
+
+```
+
+##Test variables correlation - Pairwise
+
+```{r}
+
+v_price_cor <- cor.test(houses[, c(9)], houses$MEDV, method = "pearson")
+v_price_cor
+
+```
+
+Features correlation 
+
+```{r echo=F}
+library(recommenderlab)
+
+#crea features matrix
+houseRRM <- as(as.matrix(houses[, c(-1, -15)]), "realRatingMatrix")
+
+
+sim_feat <- similarity(houseRRM, method = "pearson", which = "items")
+sim_feat
+
+
+```
+
+## Esporto 
+
+```{r echo=FALSE}
+
+write.table(houses, file="data/houses.csv", quote=FALSE, sep="|", row.names=FALSE)
+
+```
+
+EOF
