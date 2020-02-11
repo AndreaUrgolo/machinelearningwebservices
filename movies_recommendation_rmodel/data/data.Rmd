@@ -1,0 +1,499 @@
+---
+title: "IBCF / UBCF - MovieLens Restaurant Recommendation System"
+output: html_notebook
+---
+
+Importa recommenderlab e lo utilizza per le feature
+
+```{r eval=TRUE, echo=FALSE}
+library(recommenderlab)
+set.seed(1)
+data(MovieLense)
+
+ratings_movies <- MovieLense
+
+```
+
+Calcola similarità tra i primi 10 ristoranti basandosi sulle relative feature 
+
+```{r eval=TRUE, echo=FALSE}
+
+# #test
+# #dim(binaryFM)
+# sim_res <- similarity(binaryFM[,1:10], method = "pearson", which = "items")
+# image(as.matrix(sim_res), main = "Restaurants similarity (pearson)", xlab="restaurants", ylab="restaurants", x=1:10, y=1:10)
+```
+
+
+Calcola similarità tra tutti i ristoranti basandosi sulle relative feature 
+
+```{r eval=TRUE, echo=FALSE}
+# 
+# sim_res <- similarity(binaryFM, method = "pearson", which = "items")
+# image(as.matrix(sim_res), main = "Restaurants similarity (pearson)", xlab="restaurants", ylab="restaurants", x=1:dim(sim_res)[1], y=1:dim(sim_res)[1])
+```
+
+
+
+Calcola similarità tra le prime 10 feature basandosi sui ristoranti che ne sono carattterizzati (co-occorrenze)
+
+```{r eval=TRUE, echo=FALSE}
+# sim_feat <- similarity(binaryFM[1:10,], method = "pearson", which = "users")
+# image(as.matrix(sim_feat), main = "Features similarity (pearson)", xlab="features", ylab="features", x=1:10, y=1:10)
+```
+
+
+
+
+Calcola similarità tra le feature basandosi sui ristoranti che ne sono carattterizzati (co-occorrenze)
+
+```{r eval=TRUE, echo=FALSE}
+# sim_feat <- similarity(binaryFM, method = "pearson", which = "users")
+# image(as.matrix(sim_feat), main = "Features similarity (pearson)", xlab="features", ylab="features", x=1:dim(sim_feat)[1], y=1:dim(sim_feat)[1])
+
+#image(as.matrix(features_occurrences[c(2,4),]))
+
+```
+
+Calcola similarità tra i primi 10 ristoranti basandosi sulle relative feature (cosine)
+
+```{r eval=TRUE, echo=FALSE}
+#test
+#dim(binaryFM)
+# sim_res <- similarity(binaryFM[,1:10], method = "cosine", which = "items")
+# image(as.matrix(sim_res), main = "Restaurants similarity (cosine)", xlab="restaurants", ylab="restaurants", x=1:10, y=1:10)
+```
+
+
+Calcola similarità tra tutti i ristoranti basandosi sulle relative feature (cosine)
+
+```{r eval=TRUE, echo=FALSE}
+# sim_res <- similarity(binaryFM, method = "cosine", which = "items")
+# #test... 
+# #data.frame(as.matrix(sim_res)[9:10,10])
+# image(as.matrix(sim_res), main = "Restaurants similarity (cosine)", xlab="restaurants", ylab="restaurants",
+#     #x=1:10, y=1:10)
+#     x=1:dim(sim_res)[1], y=1:dim(sim_res)[1])
+```
+
+
+
+Calcola similarità tra le prime 10 feature basandosi sui ristoranti che ne sono carattterizzati (co-occorrenze) (cosine)
+
+```{r eval=TRUE, echo=FALSE}
+# sim_feat <- similarity(binaryFM[1:10,], method = "cosine", which = "users")
+# image(as.matrix(sim_feat), main = "Features similarity (cosine)", xlab="features", ylab="features", x=1:10, y=1:10)
+```
+
+
+
+
+Calcola similarità tra le feature basandosi sui ristoranti che ne sono carattterizzati(co-occorrenze) (cosine)
+
+```{r eval=TRUE, echo=FALSE}
+# sim_feat <- similarity(binaryFM, method = "cosine", which = "users")
+# image(as.matrix(sim_feat), main = "Features similarity (cosine)", xlab="features", ylab="features", x=1:dim(sim_feat)[1], y=1:dim(sim_feat)[1])
+
+```
+
+Importa i dati relativi alle sessioni
+
+```{r eval=TRUE, echo=FALSE}
+# sessions <- read.table("session/session.csv", sep=";", header=FALSE,  stringsAsFactors = FALSE)
+# colnames(sessions) <- c("session_date", "session_ip")
+```
+
+Prepara i dati relativi alle sessioni
+
+```{r eval=TRUE, echo=FALSE}
+
+# sessions
+# for(j in 1:nrow(sessions)) {
+#   itemList <- sessions[j,3:ncol(sessions)]
+#   itemList <- itemList[!is.na(itemList)]
+#   lastItem <- itemList[length(itemList)]
+#   sessions[j,length(itemList)+2] <- NA
+#   sessions[j,ncol(sessions)] <- lastItem
+# }
+# 
+# colnames(sessions)[ncol(sessions)] <- 'last'
+
+# #test 
+# # nrow(sessions)
+# 
+# 
+# sessions[is.na(sessions)] <- 0
+# 
+# visits_occurrences = as.data.frame(acast(sessions, session_ip~last, value.var = "last"))
+# 
+# #test
+# # nrow(visits_occurrences)
+# # length(unique(rownames(visits_occurrences)))
+# 
+# # crea visits matrix
+# binary_VM <- as(as.matrix(visits_occurrences), "realRatingMatrix")
+# binary_VMNA <- as(as.matrix(visits_occurrences), "realRatingMatrix")
+# binary_VMNA@data[binary_VM@data==0]<- NA
+# 
+# 
+# #binary_VMNA<-ratings_movies
+# 
+# max(binary_VMNA@data, na.rm=TRUE)
+# 
+# #dim(binary_VM)
+
+```
+
+Metodi di raccomandazione disponibili
+
+
+```{r eval=TRUE, echo=FALSE}
+recommender_models <- recommenderRegistry$get_entries(dataType = "realRatingMatrix")
+#names(recommender_models)
+lapply(recommender_models, "[[", "description")
+```
+
+Visite di un utente per ristorante
+
+```{r eval=TRUE, echo=FALSE}
+library("ggplot2")
+# vector_visits <- as.vector(binary_VM@data)
+# unique(vector_visits)
+                            
+```
+Frequenza visite
+
+```{r eval="TRUE" echo="FALSE"}
+# table_visits <- table(vector_visits)
+# table_visits
+```
+
+
+```{r eval="TRUE" echo="FALSE"}
+# vector_visits <- vector_visits[vector_visits>1]
+# qplot(vector_visits) + ggtitle("Distribution of visits")+xlab("Visists per user")
+```
+
+#VIsite per ristorante
+
+
+```{r eval="TRUE" echo="FALSE"}
+
+# views_per_restaurant <- colSums(binary_VM)
+# 
+# table_rviews <- data.frame(
+#   restaurant = names(views_per_restaurant),
+#   views = views_per_restaurant)
+# 
+# table_rviews <- table_rviews[order(table_rviews$views, decreasing = TRUE), ]
+# 
+# table_rviews
+```
+
+Visite per utente
+
+```{r eval="TRUE" echo="FALSE"}
+
+# views_per_user <- rowSums(binary_VM)
+# 
+# table_uviews <- data.frame(
+#   user = names(views_per_user),
+#   views = views_per_user)
+# 
+# table_uviews <- table_uviews[order(table_uviews$views, decreasing = TRUE), ]
+# 
+# table_uviews
+# ```
+# 
+# Heatmap visite (utenti con meno di 3 visite, ristoranti con più di 25 visite)
+# 
+# ```{r eval="TRUE" echo="FALSE"}
+# mV<-as.matrix(binary_VM@data)
+# #mV<-mV[rowSums(mV) > 0, colSums(mV) > 50]
+# mV<-mV[rowSums(mV) < 3, colSums(mV)> 22 ]
+# image(mV, main = "Visits heatmap", xlab="user", ylab="restaurant", x=1:nrow(mV), y=1:ncol(mV))
+```
+
+Creazione Training and Test Sets
+
+```{r eval="TRUE" echo="FALSE"}
+
+which_train <- sample(x = c(TRUE, FALSE), size = nrow(ratings_movies), replace = TRUE, prob = c(0.9, 0.1))
+recc_data_train <- ratings_movies[which_train, ]
+recc_data_test <- ratings_movies[!which_train, ]
+
+
+which_set <- sample(x = 1:5, size = nrow(ratings_movies), replace = TRUE)
+for(i_model in 1:5) {
+  which_train <- which_set == i_model
+  recc_data_train <- ratings_movies[which_train, ]
+  recc_data_test <- ratings_movies[!which_train, ]
+}
+
+
+#test
+# nrow(binary_VM)
+# nrow(recc_data_train)
+# nrow(recc_data_test)
+
+```
+
+# Item Based Collaborative Filtering Reccommender 
+
+```{r eval="TRUE" echo="FALSE"}
+recc_model <- Recommender(data = recc_data_train, method = "IBCF", parameter = list(k= 30))
+ibcf_recc_model <- recc_model
+ibcf_recc_model
+```
+
+Dettagli del modello
+
+```{r eval="TRUE" echo="FALSE"}
+model_details <- getModel(recc_model)
+model_details$description
+dim(model_details$sim)
+```
+
+Heatmap similarità ristorante/ristorante
+
+```{r eval="TRUE" echo="FALSE"}
+# image(model_details$sim, xlab="restaurant", ylab="restaurant", main="Heatmap restaurant/restaurant similarity ")
+# image(model_details$sim[1:30,1:30], xlab="restaurant", ylab="restaurant", main="Heatmap restaurant/restaurant similarity (first 30)")
+```
+
+Righe con somma valori > 0
+
+```{r eval="TRUE" echo="FALSE"}
+ row_sums <- rowSums(model_details$sim > 0)
+# test
+# table(row_sums) 
+
+```
+
+Distribuzione Colonne con somma valori > 0
+(pochi ristoranti sono simili a tanti ristoranti,
+ molti ristoranti sono simili a pochi ristoranti)
+
+```{r eval="TRUE" echo="FALSE"}
+col_sums <- colSums(model_details$sim > 0)
+qplot(col_sums) + stat_bin(binwidth = 1) + ggtitle("Similarity distribution")
+```
+
+Raccomandazione di 5 ristoranti per utente
+
+```{r eval=TRUE, echo=FALSE}
+n_recommended <- 5
+recc_predicted <- predict(object = recc_model, newdata = recc_data_test, n = n_recommended)
+```
+
+ Function of a matrix with the recommendations for each user:
+
+```{r eval=TRUE, echo=FALSE}
+recc_matrix <- sapply(recc_predicted@items, function(x) {
+  colnames(ratings_movies)[x]
+})
+
+recc_frame<-data.frame(recc_matrix)
+colnames(recc_frame)<-c(1:ncol(recc_matrix))
+recc_frame
+
+```
+
+Most recommended movies. For this purpose, we will define a vector with all the recommendations, and we will build a frequency plot:
+
+```{r eval=TRUE, echo=FALSE}
+number_of_items <- factor(table(recc_matrix))
+chart_title <- "Distribution of the number of items for IBCF"
+```
+
+The distribution chart that shows the distribution of the number of items for IBCF:
+
+```{r eval=TRUE, echo=FALSE}
+qplot(number_of_items) + ggtitle(chart_title)
+```
+
+# User Based Collaborative Filtering Reccommender (UBCF)
+
+```{r eval="TRUE" echo="FALSE"}
+ which_train <- sample(x = c(TRUE, FALSE), size = nrow(ratings_movies), replace = TRUE, prob = c(0.7, 0.3))
+ recc_data_train <- ratings_movies[which_train, ]
+ recc_data_test <- ratings_movies[!which_train, ]
+
+ which_set <- sample(x = 1:5, size = nrow(ratings_movies), replace = TRUE)
+ for(i_model in 1:5) {
+   which_train <- which_set == i_model
+   recc_data_train <- ratings_movies[which_train, ]
+   recc_data_test <- ratings_movies[!which_train, ]
+ }
+
+
+
+recc_model <- Recommender(data = recc_data_train, method = "UBCF", parameter = list(nn= 25, normalize="center"))
+recc_model
+```
+
+Dettagli del modello
+
+```{r eval="TRUE" echo="FALSE"}
+model_details <- getModel(recc_model)
+model_details$description
+dim(model_details$sim)
+```
+
+Heatmap similarità ristorante/ristorante
+
+```{r eval="TRUE" echo="FALSE"}
+image(model_details$data, xlab="user", ylab="user", main="Heatmap user/user similarity ")
+image(model_details$data[1:30,1:30], xlab="user", ylab="user", main="Heatmap user/user similarity (first 30)")
+```
+
+Raccomandazione di 5 ristoranti per utente
+
+```{r eval=TRUE, echo=FALSE}
+# n_recommended <- 5
+# recc_predicted <- predict(object = recc_model, newdata = recc_data_test, n = n_recommended)
+# 
+# recc <- data.frame(matrix(ncol = 5, nrow = 0),  stringsAsFactors = FALSE)
+# 
+# getResName <- function(x){
+#   name <- restaurants[restaurants$restaurant_id==x ,2]
+#   name
+# }
+# 
+# for(i in 1:length(recc_predicted@items)) {
+#   recc_user <- recc_predicted@items[[i]]
+#   res_user <- sapply(recc_user, getResName)
+#   recc[nrow(recc)+1,] = as.vector(res_user)
+# }
+# colnames(recc)<- c(1:5)
+# recc
+```
+
+Distribuzione raccomandazioni tra i ristoranti
+
+```{r eval=TRUE, echo=FALSE}
+
+# number_of_items <- as.vector(recc)[[1]]
+# chart_title <- "Distribution of raccommandation for Restaurant"
+# qplot(number_of_items, xlab="restaurant", ylab="n° recommandation") + 
+#   ggtitle(chart_title) + theme(
+#     #axis.title.x=element_blank(), 
+#     axis.text.x=element_blank(),
+#     axis.ticks.x=element_blank())
+```
+
+# SVD
+
+```{r eval="TRUE" echo="FALSE"}
+# recc_model <- Recommender(data = recc_data_train, method = "SVD", parameter = list(k=10))
+# recc_model
+#TODO
+
+```
+
+# Evaluation 
+
+```{r eval="TRUE" echo="FALSE"}
+
+### Evaluate top-N list recommendations on a 0-1 data set
+## Note: we sample only 100 users to make the example run faster
+
+## Create an evaluation scheme (10-fold cross validation, given-3 scheme)
+ es <- evaluationScheme(recc_data_train, method="cross-validation",
+         k=10, given=10, goodRating=4)
+
+#es <- evaluationScheme(recc_data_train, method="split", train=0.9, given=3)
+
+## run evaluation
+# ev <- evaluate(es, "RANDOM", type="topNList", n=c(1,3,5,10))
+# ev 
+
+## look at the results (by the length of the topNList)
+# avg(ev)
+# plot(ev, annotate = TRUE)
+
+## evaluate several algorithms with a list
+algorithms <- list(
+    RANDOM = list(name = "RANDOM", type="topNList", param = NULL),
+    POPULAR = list(name = "POPULAR", type="topNList", param = NULL),
+		IBCF = list(name = "IBCF", type="topNList", param = list(k=30)),
+		UBCF = list(name = "UBCF", type="topNList", param = list(nn=25))
+		# SVD = list(name = "SVD", type="topNList", param = NULL)
+)
+
+# 
+evlist <- evaluate(es, algorithms, n=c(1,3,5,10))
+plot(evlist, legend="topright")
+
+## select the first results
+#evlist[[1]]
+
+# ### Evaluate using a data set with real-valued ratings
+# ## Note: we sample only 100 users to make the example run faster
+# data("Jester5k")
+# es <- evaluationScheme(Jester5k[1:100], method="cross-validation",
+#   k=10, given=10, goodRating=5)
+# ## Note: goodRating is used to determine positive ratings
+# 
+# ## predict top-N recommendation lists
+# ## (results in TPR/FPR and precision/recall)
+# ev <- evaluate(es, "RANDOM", type="topNList", n=10)
+# avg(ev)
+# 
+# ## predict missing ratings
+# ## (results in RMSE, MSE and MAE)
+# ev <- evaluate(es, "RANDOM", type="ratings")
+# avg(ev)
+```
+
+Prova Recommendation
+
+```{r eval="TRUE" echo="FALSE"}
+user_id= "255.255.255.255"
+
+
+visit_list <- data.frame(matrix(ncol = ncol(ibcf_recc_model@model$sim), nrow = 1),  stringsAsFactors = FALSE)
+
+# voto 5
+voto5 = c(1, 8, 21, 71, 380, 429, 497, 961, 
+          678, 778, 893, 991, 346, 24, 46, 123, 341, 900, 955, 16, 323, 457, 234, 124, 13, 879) 
+
+for(i in 1:ncol(ibcf_recc_model@model$sim)){
+    if(i  %in% voto5)
+      visit_list[1,i]<- 5
+    # } else {
+    #   visit_list[1,i]<- NA
+    # }
+}
+
+# voto 5
+voto2 = c(7, 99, 32, 455, 652)
+for(i in 1:ncol(ibcf_recc_model@model$sim)){
+    if(i  %in% voto2){
+      visit_list[1,i]<- 2
+    } 
+}
+
+data.frame(as.matrix(visit_list))
+
+n_recommended <- 5
+
+#ratings_movies@data[3,1]<- 5
+#visit_m <- ratings_movies[3,]
+#data.frame(as(visit_m, "matrix"))
+
+visitFM <- as(as.matrix(visit_list), "realRatingMatrix")
+recc_predicted <- predict(object = ibcf_recc_model, newdata = visitFM, n = n_recommended)
+
+res <- data.frame (recc_predicted@items)
+colnames(res)<-c("Prediction")
+res
+
+data.frame (recc_predicted@itemLabels)
+
+```
+
+
+
+
+EOF

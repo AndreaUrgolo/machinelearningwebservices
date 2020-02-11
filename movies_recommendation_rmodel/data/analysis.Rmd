@@ -1,0 +1,356 @@
+---
+title: "Untitled"
+output: html_notebook
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Importo dataset MovieLense
+
+
+```{r echo=FALSE}
+library(ggplot2)
+library(reshape2)
+library(recommenderlab)
+library(Hmisc)
+#set.seed(1) # per rendere riproducibile la scelta random (solo x testing)
+```
+
+## Dati dei film 
+
+```{r echo=FALSE}
+
+movies <- read.csv("ml-1m/movies.dat", sep="|", header=FALSE, stringsAsFactors = FALSE)
+colnames(movies) <- c("movie_id", "title", "year", "genres")
+gen_col_index <- grep("genres", colnames(movies))
+
+# aggiusto i generi
+for(i in 1: nrow(movies)){
+  gen_list <- strsplit(as.character(movies[i,gen_col_index]), ',')[[1]] 
+  for(j in 1:length(gen_list)){
+    gen<-gen_list[j]
+    dummy_gen_col_index <- grep(gen, colnames(movies))
+    if(length(dummy_gen_col_index)==0) { # colonna non presente (la aggiungo)
+      dummy_gen_col_index<-ncol(movies)+1
+      movies[i,dummy_gen_col_index]<- 1
+      colnames(movies)[dummy_gen_col_index]<- gen
+    } else {
+      movies[i,dummy_gen_col_index]<- 1
+    }
+  }
+}
+
+
+#rimuovo colonna genere
+movies<-movies[,c(-3,-gen_col_index)]
+movies[is.na(movies)]<-0
+```
+
+## Studio correlazioni tra feature dei film
+
+```{r echo=F}
+#library(Hmisc)
+movies_cor <- cor(as.matrix(movies[,c(-1,-2)]), use="complete.obs", method="pearson")  # type can be pearson, spearmanor kendall
+#image(movies_cor, xlab="feature", ylab="feature")
+
+labels <- colnames(movies_cor)
+image(movies_cor, xlab="", ylab="", x = 1:length(labels), y = 1:length(labels), axes=FALSE, main="Matrice Correlazioni per le feature dei film")
+axis(1, at=1:length(labels), labels=labels, las= VERTICAL<-2)
+axis(2, at=1:length(labels), labels=labels, las= HORIZONTAL<-1)
+```
+```{r echo=F}
+rcorr(as.matrix(movies[,c(-1,-2)])) 
+
+```
+
+
+## Dati utenti
+
+```{r echo=FALSE}
+
+users <- read.table("ml-1m/users.dat", sep="|", header=FALSE, stringsAsFactors = FALSE)
+colnames(users) <- c("user_id", "gender", "age", "occupation", "zip code")
+
+#tabella temporanea per estrarre dati su età
+ages <- read.table("ml-1m/ages.dat", sep="|", header=FALSE, stringsAsFactors = FALSE)
+colnames(ages) <- c("id", "name")
+
+# ci sono utenti con età non previste? (No)
+# users[users$age!=1 & users$age!=18 & users$age!=25 & users$age!=35 & users$age!=45 & users$age!=50 & users$age!=56, ]
+	
+#tabella temporanea per estrarre dati su occupazioni
+occupations <- read.table("ml-1m/occupations.dat", sep="|", header=FALSE, stringsAsFactors = FALSE)
+colnames(occupations) <- c("id", "name")
+
+# inserisco dummy variable per occupation, age e gender
+occ_col_index<-grep("occupation", colnames(users))
+age_col_index<-grep("age", colnames(users))
+gen_col_index<-grep("gender", colnames(users))
+
+# ci sono valori diversi da M e F per gender? (No)
+# users[users$gender!="M" & users$gender!="F",]
+
+# aggiusta le età
+for(i in 1:nrow(users)){
+ # age
+  age_id <- as.integer(users[i,age_col_index])
+  if(age_id != 1){ # non creo var dummy per "under18"
+    age <- ages[ages$id == age_id, 'name']
+    users[i,age_col_index] <- age
+  
+    dummy_age_col_index <- grep(users[i,age_col_index], colnames(users))
+    if(length(dummy_age_col_index)==0) { # colonna non presente (la aggiungo)
+      dummy_age_col_index<-ncol(users)+1
+      users[i,dummy_age_col_index]<- 1
+      colnames(users)[dummy_age_col_index]<- users[i,age_col_index]
+    } else {
+      users[i,dummy_age_col_index]<- 1
+    }
+  }
+}
+
+# aggiusta occupazione e genere
+for(i in 1:nrow(users)){
+  
+  # occupazioni 
+  occ_id <- as.integer(users[i,occ_col_index])
+  
+  if(occ_id != 0){ # non creo var dummy per "other"
+    occ <- occupations[occupations$id == occ_id, 'name']
+    users[i,occ_col_index] <- occ
+  
+    dummy_occ_col_index <- grep(users[i,occ_col_index], colnames(users))
+    if(length(dummy_occ_col_index)==0) { # colonna non presente (la aggiungo)
+      dummy_occ_col_index<-ncol(users)+1
+      users[i,dummy_occ_col_index]<- 1
+      colnames(users)[dummy_occ_col_index]<- users[i,occ_col_index]
+    } else {
+      users[i,dummy_occ_col_index]<- 1
+    }
+  }
+
+  # gender
+  if(users[i,gen_col_index]=="F"){
+    users[i,gen_col_index]<-1
+  } else {
+    users[i,gen_col_index]<-0
+  }
+}
+
+users[is.na(users)]<-0
+ 
+users[,gen_col_index] <- as.numeric(users[,gen_col_index])
+ 
+zip_col_index <- grep("zip code", colnames(users))
+users[,zip_col_index] <- as.numeric(users[,zip_col_index])
+ 
+#tolgo vecchie colonne occupazioni, age
+users<-users[,-occ_col_index]
+users<-users[,-age_col_index]
+
+users
+
+
+```
+
+## Studio correlazioni tra feature degli utenti
+
+```{r echo=F}
+#library(Hmisc)
+users_cor <- cor(as.matrix(users[,c(-1)]), use="complete.obs", method="pearson") # type can be pearson, spearmanor kendall
+#image(movies_cor, xlab="feature", ylab="feature")
+
+
+
+labels <- colnames(users_cor)
+image(users_cor, xlab="", ylab="", x = 1:length(labels), y = 1:length(labels), axes=FALSE, main="Matrice Correlazioni per le feature degli utenti")
+axis(1, at=1:length(labels), labels=labels, las= VERTICAL<-2)
+axis(2, at=1:length(labels), labels=labels, las= HORIZONTAL<-1)
+```
+
+```{r echo=F}
+rcorr(as.matrix(users[,c(-1)])) 
+```
+
+## Ratings
+
+Format: UserID|MovieID|Rating|Timestamp
+
+- UserIDs range between 1 and 6040 
+- MovieIDs range between 1 and 3952
+- Ratings are made on a 5-star scale (whole-star ratings only)
+- Timestamp is represented in seconds since the epoch as returned by time(2)
+- Each user has at least 20 ratings
+
+```{r echo=FALSE}
+ratings <- read.table("ml-1m/ratings.dat", sep="|", header=FALSE, stringsAsFactors = FALSE)
+colnames(ratings)<-c("user_id","movie_id","rate","timestamp")
+
+# pulizia di voti non validi (id film o utente non presente) (nessuno)
+# for(i in 1:nrow(ratings)){
+#   if(nrow(users[users$user_id==ratings[i,'user_id'],])==0 |
+#      nrow(movies[movies$movie_id==ratings[i,'movie_id'],])==0){
+#     ratings<-ratings[-i,]
+#   }
+# }
+ratings <- dcast(ratings, user_id~movie_id, value.var = "rate")
+
+```
+
+Distanza utenti basata su feature
+
+```{r echo=FALSE}
+image(as.matrix(dissimilarity(as.matrix(users[1:200,-1]), method = "euclidean")), main="Distanze utenti (euclide)", x=1:200, y=1:200, xlab="", ylab="")
+```
+
+Distanza film basata su feature
+
+```{r echo=FALSE}
+image(as.matrix(dissimilarity(as.matrix(movies[1:300,c(-1,-2)]), method = "euclidean")), main="Distanze film (euclide)", x=1:300, y=1:300, xlab="", ylab="")
+```
+
+Distanza utenti basata su voti
+
+```{r echo=FALSE}
+#image(as.matrix(dissimilarity(as.matrix(ratings), method = "euclidean")), main="Distanza utenti basata sui voti (euclide)", x=1:nrow(ratings), y=1:nrow(ratings), xlab="", ylab="")
+```
+
+Training modello CB dei film : calcolo dati per predizioni basate su features 
+
+```{r echo=FALSE}
+
+# Preparo dataset
+which_train <- sample(x = c(TRUE, FALSE), size = nrow(movies), replace = TRUE, prob = c(0.85, 0.15))
+movies_train <- movies[which_train, ]
+movies_test <- movies[!which_train, ]
+
+# prende un quinto degli insiemi di training
+which_set <- sample(x = 1:5, size = nrow(movies_train), replace = TRUE)
+for(i_model in 1:5) {
+  which_train <- which_set == i_model
+  movies_train <- movies[which_train, ]
+  #movies_test <- movies[!which_train, ]
+}
+
+# movies_train
+# movies_test
+
+movies_feature <- movies_train[,c(-1,-2)]
+movies_distance <- as.matrix(dissimilarity(as.matrix(movies_feature), method = "euclidean"))
+#image(as.matrix(movies_distance))
+movies_similarity <- data.frame(movies_distance)
+for (i in 1:nrow(movies_distance)){
+  movies_similarity[i,] <- lapply(movies_distance[i,], function(x){
+    x<- 1/(1+x)
+    x
+  })
+}
+```
+
+Calcolo peso feature
+
+```{r echo=FALSE}
+
+n_movies <- nrow(movies_feature)
+n_features <- ncol(movies_feature)
+
+feature_df <- colSums(movies_feature)
+feature_weights <- lapply(feature_df, function(x){
+    x <- n_movies / (x * n_features)
+    x
+})
+
+# somma similarity per normalizzazione
+sim_row_Sum <- colSums(movies_similarity) 
+sim_row_Sum <- lapply(sim_row_Sum, function(x){
+  x<-x-1 
+  x
+})
+
+# calcolo similarity per film considerando le feature
+simFeat_row_sum <- data.frame(movies_feature)
+simFeat_row_sum[] <- 0
+for(i in 1:nrow(movies_similarity)){
+  for(j in 1:nrow(movies_similarity)){
+    if(j==i) next
+    for (k in 1:ncol(movies_feature)) {
+      if(movies_feature[j,k]==1){
+        simFeat_row_sum[i,k]<- simFeat_row_sum[i,k] + movies_similarity[i,j]
+      }
+    }
+  }
+}
+
+# calcolo matrice movie/feature 
+for(i in 1:nrow(movies_feature)){
+  for(j in 1:ncol(movies_feature)){
+    if(movies_feature[i,j]==0){
+      movies_feature[i,j]<- (simFeat_row_sum[i,j]/as.numeric(sim_row_Sum[i]))
+    }
+    movies_feature[i,j] <- movies_feature[i,j] * as.numeric(feature_weights[j])
+  }
+}
+
+max_val <- max(movies_feature)
+norm <- 10/max_val
+
+for(i in 1:nrow(movies_feature)){
+  movies_feature[i,]<-lapply(movies_feature[i,], function(x){
+    x<-x*norm
+    x
+  })
+}
+
+movies_feature<-cbind(movies[1:nrow(movies_feature),c(1,2)], movies_feature)
+
+```
+
+Correlazioni tra film (pearson)
+
+```{r echo=FALSE}
+
+movie_cor <- cor(t(as.matrix(movies_feature[,c(-1,-2)])), method = "pearson", use="complete.obs")
+image(movie_cor, main="Corelazione tra film basata sulle feature", x=1:nrow(movie_cor), y=1:ncol(movie_cor), xlab="", ylab="")
+
+image(movie_cor[1:30, 1:30], main="Corelazione tra film basata sulle feature (pearson)", x=1:30, y=1:30, xlab="", ylab="")
+
+```
+
+Utente sceglie un film dal test set 
+
+```{r echo=FALSE}
+random <- sample(1:nrow(movies_test), size=1)
+
+movies_test[random,2]
+
+# film scelto 
+m_feats<-movies_test[random,c(-1,-2)]
+
+#mplus <- rbind(movies_train[,c(-1,-2)], m_feats)
+diss <- dissimilarity(x = as.matrix(movies_train[,c(-1,-2)]), y = as.matrix(m_feats))
+sim <- lapply(diss, function(x){
+  x<-1/(1+x)
+})
+
+sim_sum <-0 
+lapply(sim, function(x){
+   sim_sum<<-sim_sum+x
+})
+ 
+for(i in  1:ncol(m_feats)){
+  if(m_feats[i]==0) {
+    m_feats[1,i] <- as.numeric(sim[i])/sim_sum
+  }
+  m_feats[1,i] <- m_feats[i] * feature_weights[i]
+}
+
+#movies_feature[nrow(movies_feature)+1,] <- m_feats
+m_cor <- cor(x=t(as.matrix(movies_feature[,c(-1,-2)])), y=t(m_feats), method = "pearson", use="complete.obs")
+res <- order(as.vector(m_cor), na.last=TRUE, decreasing=TRUE)[1:10] 
+cbind(movies_train[res,2], m_cor[res])
+
+```
+
+EOF
