@@ -1,6 +1,6 @@
 # Machine Learning Web services
 
-Flask Web Services for instantiation and training of ML models with some public available datasets:
+Flask Web Services for instantiation and training of ML models with some public available datasets.
 
 Available tasks:
 
