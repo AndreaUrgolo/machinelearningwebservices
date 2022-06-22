@@ -7,7 +7,7 @@ futures
 h5py
 joblib==0.13.2
 matplotlib==3.0.2
-numpy==1.15.4
+numpy==1.22.0
 pandas==0.24.0
 pathlib2
 PyJWT
