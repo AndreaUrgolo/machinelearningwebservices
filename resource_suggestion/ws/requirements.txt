@@ -5,7 +5,7 @@ flask-restful
 Flask-WTF
 futures
 h5py
-joblib==0.13.2
+joblib==1.2.0
 matplotlib==3.0.2
 numpy==1.15.4
 pandas==0.24.0
